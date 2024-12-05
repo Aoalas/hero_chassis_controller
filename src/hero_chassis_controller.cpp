@@ -1,103 +1,102 @@
 #include "hero_chassis_controller/hero_chassis_controller.h"
 #include <pluginlib/class_list_macros.hpp>
+#include <geometry_msgs/Twist.h>
+#include <sensor_msgs/JointState.h>
 #include <control_toolbox/pid.h>
 #include <ros/ros.h>
-#include <controller_interface/controller_base.h>
-#include <dynamic_reconfigure/server.h>
-#include <hero_chassis_controller/PidConfigConfig.h>
-#include <effort_controllers/joint_effort_controller.h>
-#include <forward_command_controller/forward_command_controller.h>
 
 namespace hero_chassis_controller {
+    bool HeroChassisController::init(hardware_interface::EffortJointInterface *effort_joint_interface,
+                                     ros::NodeHandle &root_nh, ros::NodeHandle &controller_nh) {
 
-    HeroChassisController::HeroChassisController()
-            : state_(0) {}
+        front_left_joint_ = effort_joint_interface->getHandle("left_front_wheel_joint");
+        front_right_joint_ = effort_joint_interface->getHandle("right_front_wheel_joint");
+        back_left_joint_ = effort_joint_interface->getHandle("left_back_wheel_joint");
+        back_right_joint_ = effort_joint_interface->getHandle("right_back_wheel_joint");
 
-    bool HeroChassisController::init(hardware_interface::EffortJointInterface* effort_joint_interface,
-                                     ros::NodeHandle& controller_nh)
-    {
-//        front_left_joint_ = effort_joint_interface->getHandle("left_front_wheel_joint");
-//        front_right_joint_ = effort_joint_interface->getHandle("right_front_wheel_joint");
-//        back_left_joint_ = effort_joint_interface->getHandle("left_back_wheel_joint");
-//        back_right_joint_ = effort_joint_interface->getHandle("right_back_wheel_joint");
+        controller_nh.getParam("wheel_radius", wheel_radius_);
+        controller_nh.getParam("chassis_width", chassis_width_);
+        controller_nh.getParam("chassis_length", chassis_length_);
+        controller_nh.getParam("wheelbase", wheel_base_);
+        controller_nh.getParam("wheel_track", wheel_track_);
 
-        try {
-            front_left_joint_ = effort_joint_interface->getHandle("left_front_wheel_joint");
-            front_right_joint_ = effort_joint_interface->getHandle("right_front_wheel_joint");
-            back_left_joint_ = effort_joint_interface->getHandle("left_back_wheel_joint");
-            back_right_joint_ = effort_joint_interface->getHandle("right_back_wheel_joint");
-            ROS_INFO("Successfully initialized joint handles.");
-        } catch (const hardware_interface::HardwareInterfaceException& e) {
-            ROS_ERROR_STREAM("Failed to get joint handle: " << e.what());
-            return false;
-        }
-        // 初始化 PID 控制器
+        //初始化 PID 控制器
+        front_left_pid_.init(ros::NodeHandle(controller_nh, "front_left_pid"));
+        front_right_pid_.init(ros::NodeHandle(controller_nh, "front_right_pid"));
+        back_left_pid_.init(ros::NodeHandle(controller_nh, "back_left_pid"));
+        back_right_pid_.init(ros::NodeHandle(controller_nh, "back_right_pid"));
 
+        // 订阅动作指令话题
+        joint_state_sub = root_nh.subscribe("/joint_states", 10, &HeroChassisController::jointStateCallback, this);
+        //订阅当前速度
+        cmd_vel_sub = root_nh.subscribe("/cmd_vel", 1, &HeroChassisController::cmdVelCallback, this);
 
-        // 初始化动态重配置服务器
-        dynamic_reconfigure_server_ = std::make_shared<dynamic_reconfigure::Server<hero_chassis_controller::PidConfigConfig>>(controller_nh);
-
-        // 设置动态参数回调
-        dynamic_reconfigure::Server<hero_chassis_controller::PidConfigConfig>::CallbackType f;
-        f = [this](auto && PH1, auto && PH2) { dynamicReconfigureCallback(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2)); };
-//        f = boost::bind(&HeroChassisController::dynamicReconfigureCallback, this, _1, _2);
-        dynamic_reconfigure_server_->setCallback(f);
-
+        last_cmd_time_ = ros::Time::now();
         return true;
     }
 
-    bool HeroChassisController::initRequest(hardware_interface::RobotHW* robot_hw,
-                                            ros::NodeHandle& root_nh,
-                                            ros::NodeHandle& controller_nh,
-                                            controller_interface::ControllerBase::ClaimedResources& resources)
-    {
-        // 如果没有特殊的硬件初始化需求，可以简单返回 true
-        return true;
+    void HeroChassisController::update(const ros::Time &time, const ros::Duration &period) {
+
+//        double timeout = 0.5; // 如果超过 0.5 秒未收到新的 /cmd_vel 消息，则停止运动
+//        if ((time - last_cmd_time_).toSec() > timeout) {
+//            desired_vx_ = 0.0;
+//            desired_vy_ = 0.0;
+//            desired_omega_ = 0.0;
+//            last_cmd_time_ = time;
+//        }
+        // 获得底盘整体的目标速度
+        double vx = desired_vx_;
+        double vy = desired_vy_;
+        double omega = desired_omega_;
+//        ROS_INFO("计算轮子目标速度: %f %f %f", vx, vy, omega);
+
+//      获得底盘当前实际速度
+        double now_back_left_vel_ = back_left_vel_;
+        double now_front_left_vel_ = front_left_vel_;
+        double now_back_right_vel_ = back_right_vel_;
+        double now_front_right_vel_ = front_right_vel_;;
+//        逆运动学
+        double front_left_target = (vx - vy - (chassis_width_ + chassis_length_) * omega) / wheel_radius_;
+        double front_right_target = (vx + vy + (chassis_width_ + chassis_length_) * omega) / wheel_radius_;
+        double back_left_target = (vx + vy - (chassis_width_ + chassis_length_) * omega) / wheel_radius_;
+        double back_right_target = (vx - vy + (chassis_width_ + chassis_length_) * omega) / wheel_radius_;
+
+        // 读取当前轮子速度
+//        double front_left_effort = front_left_joint_.getEffort();
+//        double front_right_effort = front_right_joint_.getEffort();
+//        double back_left_effort = back_left_joint_.getEffort();
+//        double back_right_effort = back_right_joint_.getEffort();
+//        ROS_INFO("now vel: %f %f %f %f", front_left_effort, front_right_effort, back_left_effort, back_right_effort);
+
+        // 计算 PID 控制命令
+        double front_left_cmd = front_left_pid_.computeCommand(front_left_target - now_front_left_vel_, period);
+        double front_right_cmd = front_right_pid_.computeCommand(front_right_target - now_front_right_vel_, period);
+        double back_left_cmd = back_left_pid_.computeCommand(back_left_target - now_back_left_vel_, period);
+        double back_right_cmd = back_right_pid_.computeCommand(back_right_target - now_back_right_vel_, period);
+
+//        ROS_INFO("cmd: %f %f %f %f", front_left_cmd, front_right_cmd, back_left_cmd, back_right_cmd);
+        front_left_joint_.setCommand(front_left_cmd);
+        front_right_joint_.setCommand(front_right_cmd);
+        back_left_joint_.setCommand(back_left_cmd);
+        back_right_joint_.setCommand(back_right_cmd);
     }
 
-    void HeroChassisController::starting(const ros::Time& time)
-    {
-        // 在控制器开始时初始化所需的内容
-        // 你可以在此处初始化 PID 等控制器参数
-        ros::NodeHandle nh;
-        float p_front_left_,i_front_left_,d_front_left_;
-        float p_front_right_,i_front_right_,d_front_right_;
-        float p_back_left_,i_back_left_,d_back_left_;
-        float p_back_right_,i_back_right_,d_back_right_;
-        // 从参数服务器加载 PID 参数
-        nh.getParam("controller/hero_chassis_controller/p_front_left", p_front_left_);  // 默认值为 1.0
-        nh.getParam("controller/hero_chassis_controller/i_front_left", i_front_left_);  // 默认值为 0.0
-        nh.getParam("controller/hero_chassis_controller/d_front_left", d_front_left_);  // 默认值为 0.0
-
-        nh.getParam("controller/hero_chassis_controller/p_front_right", p_front_right_);
-        nh.getParam("controller/hero_chassis_controller/i_front_right", i_front_right_);
-        nh.getParam("controller/hero_chassis_controller/d_front_right", d_front_right_);
-
-        nh.getParam("controller/hero_chassis_controller/p_back_left", p_back_left_);
-        nh.getParam("controller/hero_chassis_controller/i_back_left", i_back_left_);
-        nh.getParam("controller/hero_chassis_controller/d_back_left", d_back_left_);
-
-        nh.getParam("controller/hero_chassis_controller/p_back_right", p_back_right_);
-        nh.getParam("controller/hero_chassis_controller/i_back_right", i_back_right_);
-        nh.getParam("controller/hero_chassis_controller/d_back_right", d_back_right_);
-
-        pid_front_left_.initPid(p_front_left_, i_front_left_, d_front_left_, 10.0, -10.0);
-        pid_front_right_.initPid(p_front_right_, i_front_right_, d_front_right_, 10.0, -10.0);
-        pid_back_left_.initPid(p_back_left_, i_back_left_, d_back_left_, 10.0, -10.0);
-        pid_back_right_.initPid(p_back_right_, i_back_right_, d_back_right_, 10.0, -10.0);
+//  读取/vmd_vel上的目标速度
+    void HeroChassisController::cmdVelCallback(const geometry_msgs::Twist::ConstPtr &msg) {
+        desired_vx_ = msg->linear.x;    // x轴线速度（前进）
+        desired_vy_ = msg->linear.y;    // y轴线速度（侧移）
+        desired_omega_ = msg->angular.z;    // z轴角速度（旋转）
+        ROS_INFO("keyboard cmd: %f %f %f", desired_vx_, desired_vy_, desired_omega_);
+        last_cmd_time_ = ros::Time::now(); // 更新最新命令时间
     }
 
-    void HeroChassisController::update(const ros::Time& time, const ros::Duration& period)
-    {
-        double error[4] = { 0.1, 0.1, 0.1, 0.1 };
-
-        front_left_joint_.setCommand(pid_front_left_.computeCommand(error[0], period));
-        front_right_joint_.setCommand(pid_front_right_.computeCommand(error[1], period));
-        back_left_joint_.setCommand(pid_back_left_.computeCommand(error[2], period));
-        back_right_joint_.setCommand(pid_back_right_.computeCommand(error[3], period));
+//  读取当前四个轮子速度
+    void HeroChassisController::jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg) {
+        back_left_vel_ = msg->velocity[0];
+        front_left_vel_ = msg->velocity[1];
+        back_right_vel_ = msg->velocity[2];
+        front_right_vel_ = msg->velocity[3];
     }
 
     PLUGINLIB_EXPORT_CLASS(hero_chassis_controller::HeroChassisController, controller_interface::ControllerBase)
-
 }  // namespace hero_chassis_controller
-

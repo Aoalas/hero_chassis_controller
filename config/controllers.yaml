@@ -1,28 +1,45 @@
 controller:
   hero_chassis_controller:
-    type: "hero_chassis_controller/HeroChassisController"  # 插件类型（包名/类名）
-    joints:
-      - left_front_wheel_joint
-      - right_front_wheel_joint
-      - left_back_wheel_joint
-      - right_back_wheel_joint
-    pid:
-      p_front_left: 1.0
-      i_front_left: 0.0
-      d_front_left: 0.0
-      p_front_right: 1.0
-      i_front_right: 0.0
-      d_front_right: 0.0
-      p_back_left: 1.0
-      i_back_left: 0.0
-      d_back_left: 0.0
-      p_back_right: 1.0
-      i_back_right: 0.0
-      d_back_right: 0.0
-      p: 1.0
-      i: 0.1
-      d: 0.1
+    type: hero_chassis_controller/HeroChassisController
+    wheel_radius: 0.07625  # 轮半径
+    chassis_width: 0.5  #底盘宽
+    chassis_length: 0.5  #底盘长
+    wheel_base: 0.4  # 轴距
+    wheel_track: 0.4  # 轮距
 
   joint_state_controller:
-    type: "joint_state_controller/JointStateController"
+    type: joint_state_controller/JointStateController
     publish_rate: 50
+
+controller/hero_chassis_controller:
+  front_left_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true
+
+  front_right_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true
+
+  back_left_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true
+
+  back_right_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true

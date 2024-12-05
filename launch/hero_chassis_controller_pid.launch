@@ -1,11 +1,11 @@
 <launch>
+
     <rosparam file="$(find hero_chassis_controller)/config/controllers.yaml" command="load"/>
-    <!-- 启动控制器管理器 -->
+    <!-- load the controllers -->
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
           output="screen" args="
         controller/hero_chassis_controller
         controller/joint_state_controller
   "/>
-    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" required="true" output="screen" />
-</launch>
 
+</launch>

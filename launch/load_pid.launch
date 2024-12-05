@@ -1,5 +1,4 @@
 <launch>
-
     <rosparam file="$(find hero_chassis_controller)/config/controllers.yaml" command="load"/>
     <!-- load the controllers -->
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
@@ -7,5 +6,4 @@
         controller/hero_chassis_controller
         controller/joint_state_controller
   "/>
-
 </launch>
