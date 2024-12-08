@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
         pluginlib
         dynamic_reconfigure
         control_toolbox
+        tf
 )
 
 generate_dynamic_reconfigure_options(

@@ -1,4 +1,4 @@
-# simple_chassis_controller
+# keyboard_controller
 
 ## Overview
 
@@ -15,7 +15,7 @@ The source code is released under a [BSD 3-Clause license](LICENSE).
 Affiliation: [Dynamicx]()<br />
 Maintainer: QiayuanLiao, liaoqiayuan@gmail.com**
 
-The simple_chassis_controller package has been tested under [ROS] Noetic on respectively 18.04 and 20.04. This is
+The keyboard_controller package has been tested under [ROS] Noetic on respectively 18.04 and 20.04. This is
 research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
 ## Installation
@@ -37,8 +37,8 @@ To build from source, clone the latest version from this repository into your ca
 using
 
 	cd catkin_workspace/src
-	git clone git@github.com:gdut-dynamic-x/simple_chassis_controller.git
-    # git clone https://github.com/gdut-dynamic-x/simple_chassis_controller.git
+	git clone git@github.com:gdut-dynamic-x/keyboard_controller.git
+    # git clone https://github.com/gdut-dynamic-x/keyboard_controller.git
 	cd ../
 	rosdep install --from-paths . --ignore-src
 	catkin build
@@ -47,13 +47,13 @@ using
 
 Run the simulation and controller with:
 
-	roslaunch simple_chassis_controller run_simulation_and_controller.launch
+	roslaunch keyboard_controller run_simulation_and_controller.launch
 
 ## Config files
 
 Config file config
 
-* **controllers.yaml**  Params of simple_chassis_controller and joint_state_controller.
+* **controllers.yaml**  Params of keyboard_controller and joint_state_controller.
 
 ## Launch files
 
@@ -62,7 +62,7 @@ Config file config
 ## Bugs & Feature Requests
 
 Please report bugs and request features using
-the [Issue Tracker](https://github.com/gdut-dynamic-x/simple_chassis_controller/issues)
+the [Issue Tracker](https://github.com/gdut-dynamic-x/keyboard_controller/issues)
 .
 
 [ROS]: http://www.ros.org

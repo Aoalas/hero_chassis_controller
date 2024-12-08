@@ -22,7 +22,7 @@
 
 - [rm_description](https://github.com/YoujianWu/rm_description_for_task.git)
 
-#### 2. 学习理解并运行 [simple_chassis_controller](https://github.com/YoujianWu/simple_chassis_controller)
+#### 2. 学习理解并运行 [keyboard_controller](https://github.com/YoujianWu/keyboard_controller)
 
 **分数: 10**
 
@@ -30,7 +30,7 @@
 
 1. 全程使用 CLion 进行编译和 DeBug （可在群里寻求帮助）
 2. 如需使用catkin命令行工具，使用 `catkin-tool` 而不是 `catkin_make` (可在群里寻求帮助)
-3. 理解 `SimpleChassisController` 的类成员意义
+3. 理解 `KeyboardController` 的类成员意义
 4. 理解控制器怎么被加载进模拟器和实际机器人中 (pluginlib)
 
 参考资料：
@@ -38,7 +38,7 @@
 - [CLion ROS setup tutorial](https://www.jetbrains.com/help/clion/ros-setup-tutorial.html)
 - [CLion Attach to process](https://www.jetbrains.com/help/clion/attaching-to-local-process.html)
   调试simple_chassis_controller时, 应该 attach 到 `gzsever`
-- [simple_chassis_controller]
+- [keyboard_controller]
 - [ros_control: A generic and simple control framework for ROS](http://www.theoj.org/joss-papers/joss.00456/10.21105.joss.00456.pdf)
 - [ros_control: wiki](https://github.com/ros-controls/ros_control/wiki)
 - [Gazbeo: Tutorial: ROS Control](http://gazebosim.org/tutorials/?tut=ros_control)
@@ -184,6 +184,6 @@
 
 [rm_description]: https://github.com/gdut-dynamic-x/rm_description
 
-[simple_chassis_controller]: https://github.com/gdut-dynamic-x/simple_chassis_controller
+[keyboard_controller]: https://github.com/gdut-dynamic-x/keyboard_controller
 
 [catkin-tool]: https://catkin-tools.readthedocs.io/
