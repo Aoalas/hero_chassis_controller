@@ -6,6 +6,7 @@ controller:
     chassis_length: 0.5  #底盘长
     wheel_base: 0.4  # 轴距
     wheel_track: 0.4  # 轮距
+    speed_mode: "local"  # "global" 或者 "local"
 
   joint_state_controller:
     type: joint_state_controller/JointStateController
