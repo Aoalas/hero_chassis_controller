@@ -30,11 +30,15 @@ namespace hero_chassis_controller {
 
         void update(const ros::Time &time, const ros::Duration &period) override;
 
-        void cmdVelCallback(const geometry_msgs::Twist::ConstPtr &msg);
+        void set_chassis_state(const geometry_msgs::Twist::ConstPtr& msg);
+
+        void cmdVel_Calc(const geometry_msgs::Twist::ConstPtr &msg);
 
         void jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg);
 
-        void updateOdometry(const sensor_msgs::JointState::ConstPtr &msg);
+        void calc_vel() const;
+
+        void updateOdometry();
         tf::TransformBroadcaster odom_broadcaster;
         tf::TransformListener tf_listener;
 
@@ -47,7 +51,7 @@ namespace hero_chassis_controller {
         ros::Publisher cmd_vel_pub;
         ros::Publisher odom_pub;
 
-        ros::Time last_cmd_time_;
+        ros::Time last_time;
 
 
     private:
@@ -59,8 +63,8 @@ namespace hero_chassis_controller {
         double front_left_vel_ = 0;
         double back_right_vel_ = 0;
         double front_right_vel_ = 0;  //速度
-        double target_vx_ = 0.01;
-        double target_vy_ = 0.01;
+        double target_vx_ = 1;
+        double target_vy_ = 1;
         double target_omega_ = 0;    //距离方向
         double x = 0.0;
         double y = 0.0;
