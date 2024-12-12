@@ -12,6 +12,9 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2_ros/transform_listener.h"
 #include <memory>
 #include <ros/ros.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -41,6 +44,8 @@ namespace hero_chassis_controller {
         void updateOdometry();
         tf::TransformBroadcaster odom_broadcaster;
         tf::TransformListener tf_listener;
+        tf::StampedTransform transform;
+        geometry_msgs::Vector3Stamped global_vel, base_vel;
 
         hardware_interface::JointHandle front_left_joint_, front_right_joint_, back_left_joint_, back_right_joint_;
 

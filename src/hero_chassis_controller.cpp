@@ -61,7 +61,7 @@ namespace hero_chassis_controller {
         x += dx * cos(th) * dt - dy * sin(th) * dt;
         y += dx * sin(th) * dt + dy * cos(th) * dt;
         th += dth * dt;
-
+        //输出里程计
 //        ROS_INFO("X_way :%f, Y_way:%f.", x, y);
     }
 
@@ -114,7 +114,7 @@ namespace hero_chassis_controller {
 
         pub.publish(a_msg); // 发布消息
 
-//        updateOdometry();
+        updateOdometry();
 
         last_time = current_time;
     }
@@ -124,16 +124,25 @@ namespace hero_chassis_controller {
         // 获取当前机器人与世界坐标系的变换
         if (speed_mode_ == "global") {
             // 如果速度模式是全局坐标系(global)，则需要转换速度到底盘中，以控制底盘
-            tf::StampedTransform transform;
+            global_vel.header.frame_id = "odom";
+            //    global_vel.header.stamp = current_time;
+            global_vel.header.stamp = ros::Time(0);
+            global_vel.vector.x = target_vx_;
+            global_vel.vector.y = target_vy_;
+            global_vel.vector.z = 0.0;
+            tf_listener.waitForTransform("base_link", "odom", ros::Time(0), ros::Duration(3.0));
             tf_listener.lookupTransform("base_link", "odom", ros::Time(0), transform);
+            tf_listener.transformVector("base_link", global_vel, base_vel);
+            target_vy_ = base_vel.vector.x;
+            target_vy_ = base_vel.vector.y;
 
-            // 进行坐标转换，将全局速度转换为底盘坐标系下的速度
-            tf::Vector3 global_velocity(vx, vy, omega);
-            tf::Vector3 local_velocity = transform.inverse() * global_velocity;
-            // 更新目标速度
-            vx = local_velocity.x();
-            vy = local_velocity.y();
-            omega = local_velocity.z();
+//            // 进行坐标转换，将全局速度转换为底盘坐标系下的速度
+//            tf::Vector3 global_velocity(vx, vy, omega);
+//            tf::Vector3 local_velocity = transform.inverse() * global_velocity;
+//            // 更新目标速度
+//            vx = local_velocity.x();
+//            vy = local_velocity.y();
+//            omega = local_velocity.z();
         } else {
             // 如果速度模式是底盘坐标系(local)，则直接传入速度
             vx = msg->linear.x;    // x轴线速度（前进）
@@ -154,17 +163,9 @@ namespace hero_chassis_controller {
     void HeroChassisController::updateOdometry() {
         //里程计再现，然后用于tf变换(为什么要再写一遍呢，问就是玄学)
         double dt = (ros::Time::now() - last_time).toSec();   // 根据时间差计算dt
-        last_time = ros::Time::now();              //记录last_cmd_time_用于计算dt
+        last_time = ros::Time::now();              //记录last_cmd_time_，用于下一次计算dt
 
         //获取各个车轮的速度
-        //  back_left_vel_ = msg->velocity[0];
-        //  front_left_vel_ = msg->velocity[1];
-        //  back_right_vel_ = msg->velocity[2];
-        //  front_right_vel_ = msg->velocity[3];
-//        double v1 = msg->velocity[3];       //front_right
-//        double v2 = msg->velocity[2];       //back_right
-//        double v3 = msg->velocity[1];       //front_left
-//        double v4 = msg->velocity[0];       //back_left
         double v1 = front_right_joint_.getVelocity();
         double v2 = back_right_joint_.getVelocity();
         double v3 = front_left_joint_.getVelocity();
@@ -180,23 +181,14 @@ namespace hero_chassis_controller {
         th += dth * dt;
 
         //构造 nav_msgs::Odometry 消息来储存各种信息，并且将th转换为四元数
+
+//        geometry_msgs::Quaternion odom_quaternion = tf::createQuaternionMsgFromYaw(th);
+
         nav_msgs::Odometry odom_Data{};
-        geometry_msgs::Quaternion odom_quaternion = tf::createQuaternionMsgFromYaw(th);
+        tf2::Quaternion q;
+        q.setRPY(0, 0, th);
+        geometry_msgs::Quaternion odom_quaternion = toMsg(q);
 
-        odom_Data.header.stamp = ros::Time::now();
-        odom_Data.header.frame_id = "odom";
-
-        odom_Data.pose.pose.position.x = x;
-        odom_Data.pose.pose.position.y = y;
-        odom_Data.pose.pose.position.z = 0.0;
-        odom_Data.pose.pose.orientation = odom_quaternion;
-
-        odom_Data.child_frame_id = "base_link";
-        odom_Data.twist.twist.linear.x = dx;
-        odom_Data.twist.twist.linear.y = dy;
-        odom_Data.twist.twist.angular.z = dth;
-
-        odom_pub.publish(odom_Data);    //发布
 
         //从"odom"到"base_link"的坐标变换关系
         geometry_msgs::TransformStamped odom_Trans;
@@ -208,8 +200,30 @@ namespace hero_chassis_controller {
         odom_Trans.transform.translation.y = y;
         odom_Trans.transform.translation.z = 0;
         odom_Trans.transform.rotation = odom_quaternion;
+
         //发送tf变换
-        odom_broadcaster.sendTransform(odom_Trans);
+        static ros::Time last_tf_publish_time = ros::Time::now();
+        ros::Time current_time = ros::Time::now();
+        //设置发布频率，默认的速度太快，容易unknown_publisher
+        if ((current_time - last_tf_publish_time).toSec() >= 0.02) {// 50Hz 发布频率
+            odom_broadcaster.sendTransform(odom_Trans);
+            last_tf_publish_time = current_time;  // 更新上次发布时间
+        }
+
+        odom_Data.header.stamp = ros::Time::now();
+        odom_Data.header.frame_id = "odom";
+        odom_Data.child_frame_id = "base_link";
+
+        odom_Data.pose.pose.position.x = x;
+        odom_Data.pose.pose.position.y = y;
+        odom_Data.pose.pose.position.z = 0.0;
+        odom_Data.pose.pose.orientation = odom_quaternion;
+        odom_Data.twist.twist.linear.x = vx;
+        odom_Data.twist.twist.linear.y = vy;
+        odom_Data.twist.twist.angular.z = dth;
+        //发布
+        odom_pub.publish(odom_Data);
+
     }
 
     PLUGINLIB_EXPORT_CLASS(hero_chassis_controller::HeroChassisController, controller_interface::ControllerBase)
