@@ -1,68 +1,81 @@
-# keyboard_controller
+# hero_chassis_controller 
+
+Written by *ZhuolinLiu*(刘焯林)
+
+~~RM is not your entire life.~~
 
 ## Overview
 
-This is controller example/template for the assignment (see Chinese [requirement](doc/requirement.md)) which assess
-DynamicX reserve member.
+This is a controller for a hero_chassis_robot from this website: 
 
-**Keywords:** RoboMaster, ROS, ros_control
+https://github.com/YoujianWu/rm_description_for_task.
 
-### License
+And this is my assignment for **final-task**.
 
-The source code is released under a [BSD 3-Clause license](LICENSE).
+This controller use PID to control the motion of this robot.
 
-**Author: QiayuanLiao<br />
-Affiliation: [Dynamicx]()<br />
-Maintainer: QiayuanLiao, liaoqiayuan@gmail.com**
+The hero_chassis_controller package has been tested under [ROS](http://www.ros.org/) Noetic on respectively 20.04.
 
-The keyboard_controller package has been tested under [ROS] Noetic on respectively 18.04 and 20.04. This is
-research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+**Keywords:** ROS ,ros_control, sleepless, helpless
 
-## Installation
+#### About me
 
-### Building from Source
+Author:  *ZhuolinLiu*(刘焯林)
 
-#### Dependencies
+Github ID:  Aoalas
 
-- [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
-- [rm_description](https://github.com/YoujianWu/rm_description_for_task.git)
-- controller_interface
-- forward_command_controller
-- hardware_interface
-- pluginlib
-
-#### Building
-
-To build from source, clone the latest version from this repository into your catkin workspace and compile the package
-using
-
-	cd catkin_workspace/src
-	git clone git@github.com:gdut-dynamic-x/keyboard_controller.git
-    # git clone https://github.com/gdut-dynamic-x/keyboard_controller.git
-	cd ../
-	rosdep install --from-paths . --ignore-src
-	catkin build
+Address: 2874257768@qq.com
 
 ## Usage
 
-Run the simulation and controller with:
+Just Download it and put it in your catkin workspace, don't forget to **catkin build**.
 
-	roslaunch keyboard_controller run_simulation_and_controller.launch
+After you roslaunch the hero robot, type this code in your terminal👇
 
-## Config files
+```
+roslaunch hero_chassis_controller hero_chassis_controller_pid.launch 
+```
+
+Now the PID function is ready, you can modify the PID parameter to control it.
+
+For example, rosrun your rqt_reconfigure then you can see the PID operation interface for each wheel.
+
+## Files in package
+
+### Config files
 
 Config file config
 
-* **controllers.yaml**  Params of keyboard_controller and joint_state_controller.
+- **controllers.yaml** Params of hero_chassis_controller and joint_state_controller.
 
-## Launch files
+  
 
-* **run_simulation_and_controller.launch:** Hero chassis only simulation and simple chassis controller
+### Launch files
+
+- **hero_chassis_controller_pid.launch :** Activate the PID for hero_chassis_robot.
+
+  
+
+### Other files
+
+- **cfg/PidConfig.cfg** **:**  The file for PID, you don't need to modify it.
+- The Folder named **src** and **include** contains the code for the function, you can check it out and get some details in it.
+
+## 
 
 ## Bugs & Feature Requests
 
-Please report bugs and request features using
-the [Issue Tracker](https://github.com/gdut-dynamic-x/keyboard_controller/issues)
-.
+This code is likely to be the final version, so it is highly unlikely that any changes will be made.😥
 
-[ROS]: http://www.ros.org
+## Gratitude list
+
+Thanks to GDUT for letting me know about this amazing team called DynamicX.😎
+
+Thanks to happy_cat senior, Ciler senior, and all the other seniors for their guidance to us.😊
+
+Thanks to my pro peers who remind my weakness and urge me to work harder.😭
+
+Thanks to my body for allowing me to persevere in many situations when I stay up late and stay up all night.😇
+
+Thanks to those pros extremely who will show mercy to me. ( If I successfully join the team ) 😘
+
