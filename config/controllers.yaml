@@ -1,0 +1,45 @@
+controller:
+  hero_chassis_controller:
+    type: hero_chassis_controller/HeroChassisController
+    wheel_radius: 0.07625  # 轮半径
+    chassis_width: 0.5  #底盘宽
+    chassis_length: 0.5  #底盘长
+    wheel_base: 0.4  # 轴距
+    wheel_track: 0.4  # 轮距
+    speed_mode : "local"  #"global" or "local"
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+
+controller/hero_chassis_controller:
+  front_left_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true
+
+  front_right_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true
+
+  back_left_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true
+
+  back_right_pid:
+    p: 0
+    i: 0
+    d: 0
+    i_clamp_min: -1.0
+    i_clamp_max: 1.0
+    antiwindup: true
