@@ -1,4 +1,4 @@
-# hero_chassis_controller 
+# Hero_chassis_controller 
 
 Written by *ZhuolinLiu*(刘焯林)
 
@@ -18,7 +18,20 @@ The hero_chassis_controller package has been tested under [ROS](http://www.ros.o
 
 **Keywords:** ROS ,ros_control, sleepless, helpless
 
-#### About me
+### dependencies
+
+- [Robot Operating System (ROS)](http://wiki.ros.org/) 
+- `roscpp`
+- `roslint`
+- `dynamic_reconfigure`
+- `hardware_interface`
+- `controller_interface`
+- `pluginlib`
+- `std_msgs`
+- `tf`
+- `forward_command_controller`
+
+### About me
 
 Author:  *ZhuolinLiu*(刘焯林)
 
@@ -61,21 +74,23 @@ Config file config
 - **cfg/PidConfig.cfg** **:**  The file for PID, you don't need to modify it.
 - The Folder named **src** and **include** contains the code for the function, you can check it out and get some details in it.
 
-## 
+## Additional controller (Keyboard)
 
-## Bugs & Feature Requests
+I made a keyboard controller for hero robot, I push it to other repository, if can help you to control the robot with keyboard, the usage is written in the README.md in this repository.
 
-This code is likely to be the final version, so it is highly unlikely that any changes will be made.😥
+Here is the link ↓↓↓
+
+https://github.com/Aoalas/keyboard_controller
 
 ## Gratitude list
 
 Thanks to GDUT for letting me know about this amazing team called DynamicX.😎
 
-Thanks to happy_cat senior, Ciler senior, and all the other seniors for their guidance to us.😊
+Thanks to happy_cat senior, Ciler senior, and all the other seniors for their guidances to us.😊
 
-Thanks to my pro peers who remind my weakness and urge me to work harder.😭
+Thanks to my pro peers who remind my weakness and help me to urge myself to work harder.😭
 
-Thanks to my body for allowing me to persevere in many situations when I stay up late and stay up all night.😇
+Thanks to my body for allowing me to persevere in many situations when I stay up so late and stay up all night.😇
 
 Thanks to those pros extremely who will show mercy to me. ( If I successfully join the team ) 😘
 

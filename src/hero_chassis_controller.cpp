@@ -1,3 +1,7 @@
+//Created by Aoalas(刘焯林)
+//最终考核代码，其中ROS_INFO已被注释
+//关于键盘控制的程序，我新开了一个软件包，在另一个仓库内，详细请看README.md里的内容
+
 #include "hero_chassis_controller/hero_chassis_controller.h"
 #include <pluginlib/class_list_macros.hpp>
 #include <geometry_msgs/Twist.h>
@@ -40,10 +44,6 @@ namespace hero_chassis_controller {
 
     //读取轮子的速度，然后里程计计算
     void HeroChassisController::jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg) {
-//        back_left_vel_ = msg->velocity[0];
-//        front_left_vel_ = msg->velocity[1];
-//        back_right_vel_ = msg->velocity[2];
-//        front_right_vel_ = msg->velocity[3];
 
         double dt = (ros::Time::now() - last_time).toSec();   // 根据时间差计算dt
         last_time = ros::Time::now();              //记录last_cmd_time_用于计算dt
@@ -55,13 +55,13 @@ namespace hero_chassis_controller {
 
         //使用微分思想进行计算与累加
         dx = wheel_radius_ * 0.25 * (v1 + v2 + v3 + v4);
-        dy = wheel_radius_ * -0.25 * (v3 + v2 - v1 - v4);
+        dy = wheel_radius_ * 0.25 * (v1 + v4 - v2 - v3);
         dth = wheel_radius_ * (v1 + v2 - v3 - v4) / ((wheel_track_ / 2 + wheel_base_ / 2) * 4);
 
         x += dx * cos(th) * dt - dy * sin(th) * dt;
         y += dx * sin(th) * dt + dy * cos(th) * dt;
         th += dth * dt;
-        //输出里程计
+        //输出里程计（题目6）
 //        ROS_INFO("X_way :%f, Y_way:%f.", x, y);
     }
 
@@ -125,7 +125,6 @@ namespace hero_chassis_controller {
         if (speed_mode_ == "global") {
             // 如果速度模式是全局坐标系(global)，则需要转换速度到底盘中，以控制底盘
             global_vel.header.frame_id = "odom";
-            //    global_vel.header.stamp = current_time;
             global_vel.header.stamp = ros::Time(0);
             global_vel.vector.x = target_vx_;
             global_vel.vector.y = target_vy_;
@@ -136,32 +135,28 @@ namespace hero_chassis_controller {
             target_vy_ = base_vel.vector.x;
             target_vy_ = base_vel.vector.y;
 
-//            // 进行坐标转换，将全局速度转换为底盘坐标系下的速度
-//            tf::Vector3 global_velocity(vx, vy, omega);
-//            tf::Vector3 local_velocity = transform.inverse() * global_velocity;
-//            // 更新目标速度
-//            vx = local_velocity.x();
-//            vy = local_velocity.y();
-//            omega = local_velocity.z();
         } else {
             // 如果速度模式是底盘坐标系(local)，则直接传入速度
             vx = msg->linear.x;    // x轴线速度（前进）
             vy = msg->linear.y;    // y轴线速度（侧移）
             omega = msg->angular.z;    // 角速度（旋转）
         }
-        //以目前从/cmd_vel上读取的速度来计算当前每个轮子的速度
-        double front_left_now = (vx - vy - (wheel_track_ + wheel_base_) * omega);
-        double front_right_now = (vx + vy + (wheel_track_ + wheel_base_) * omega);
-        double back_left_now = (vx + vy - (wheel_track_ + wheel_base_) * omega);
-        double back_right_now = (vx - vy + (wheel_track_ + wheel_base_) * omega);
-        ROS_INFO("Now speed:  %f  ,  %f  ,  %f  ,  %f  ", front_left_now, front_right_now, back_left_now,
-                 back_right_now);
+        //以目前从/cmd_vel上读取的速度来计算当前每个轮子的速度（题目5）
+        //输出各轮子速度(注释化ROS_INFO时记得把四个轮子速度的计算也注释，不然会报错)
+
+//        double front_left_now = (vx - vy - (wheel_track_ + wheel_base_) * omega);
+//        double front_right_now = (vx + vy + (wheel_track_ + wheel_base_) * omega);
+//        double back_left_now = (vx + vy - (wheel_track_ + wheel_base_) * omega);
+//        double back_right_now = (vx - vy + (wheel_track_ + wheel_base_) * omega);
+//        ROS_INFO("Now speed:  %f  ,  %f  ,  %f  ,  %f  ", front_left_now, front_right_now, back_left_now,
+//                 back_right_now);
+
         last_time = ros::Time::now();  // 更新时间
     }
 
 
     void HeroChassisController::updateOdometry() {
-        //里程计再现，然后用于tf变换(为什么要再写一遍呢，问就是玄学)
+        //里程计再现，然后用于tf变换
         double dt = (ros::Time::now() - last_time).toSec();   // 根据时间差计算dt
         last_time = ros::Time::now();              //记录last_cmd_time_，用于下一次计算dt
 
@@ -182,13 +177,10 @@ namespace hero_chassis_controller {
 
         //构造 nav_msgs::Odometry 消息来储存各种信息，并且将th转换为四元数
 
-//        geometry_msgs::Quaternion odom_quaternion = tf::createQuaternionMsgFromYaw(th);
-
         nav_msgs::Odometry odom_Data{};
         tf2::Quaternion q;
         q.setRPY(0, 0, th);
         geometry_msgs::Quaternion odom_quaternion = toMsg(q);
-
 
         //从"odom"到"base_link"的坐标变换关系
         geometry_msgs::TransformStamped odom_Trans;
@@ -204,7 +196,7 @@ namespace hero_chassis_controller {
         //发送tf变换
         static ros::Time last_tf_publish_time = ros::Time::now();
         ros::Time current_time = ros::Time::now();
-        //设置发布频率，默认的速度太快，容易unknown_publisher
+        //设置发布频率，默认的速度太快，容易报错unknown_publisher
         if ((current_time - last_tf_publish_time).toSec() >= 0.02) {// 50Hz 发布频率
             odom_broadcaster.sendTransform(odom_Trans);
             last_tf_publish_time = current_time;  // 更新上次发布时间

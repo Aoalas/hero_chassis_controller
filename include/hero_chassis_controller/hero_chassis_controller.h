@@ -55,6 +55,7 @@ namespace hero_chassis_controller {
         ros::Subscriber cmd_vel_sub;
         ros::Publisher cmd_vel_pub;
         ros::Publisher odom_pub;
+        ros::Publisher pub;
 
         ros::Time last_time;
 
@@ -81,7 +82,6 @@ namespace hero_chassis_controller {
         double dy = 0;
         double dth = 0;
         geometry_msgs::Twist a_msg;
-        ros::Publisher pub;
     };
 }
 #endif //HERO_CHASSIS_CONTROLLER_HERO_CHASSIS_CONTROLLER_H
