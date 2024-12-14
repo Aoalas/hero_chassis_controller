@@ -19,10 +19,10 @@ namespace hero_chassis_controller {
         back_right_joint_ = effort_joint_interface->getHandle("right_back_wheel_joint");
 
         //获取参数配置文件里面的参数
-        controller_nh.getParam("wheel_radius", wheel_radius_);  //轮半径
-        controller_nh.getParam("wheel_base", wheel_base_);  //轴距
-        controller_nh.getParam("wheel_track", wheel_track_);  //轮距
-        controller_nh.getParam("speed_mode", speed_mode_);  //速度模式
+        controller_nh.getParam("wheel_radius", wheel_radius);  //轮半径
+        controller_nh.getParam("wheel_base", wheel_base);  //轴距
+        controller_nh.getParam("wheel_track", wheel_track);  //轮距
+        controller_nh.getParam("speed_mode", speed_mode);  //速度模式
 
         //初始化 PID 控制器
         front_left_pid_.init(ros::NodeHandle(controller_nh, "front_left_pid"));
@@ -30,57 +30,31 @@ namespace hero_chassis_controller {
         back_left_pid_.init(ros::NodeHandle(controller_nh, "back_left_pid"));
         back_right_pid_.init(ros::NodeHandle(controller_nh, "back_right_pid"));
 
-        // 订阅动作指令话题
-        joint_state_sub = root_nh.subscribe("/joint_states", 10, &HeroChassisController::jointStateCallback, this);
-        //订阅当前速度
+        //订阅/cmd_vel上的速度
         cmd_vel_sub = root_nh.subscribe("/cmd_vel", 10, &HeroChassisController::cmdVel_Calc, this);
         //创建发布者，将数据发以  nav_msgs/Odometry  发布到"/odom"上
         odom_pub = root_nh.advertise<nav_msgs::Odometry>("/odom", 30);
 
-        last_time = ros::Time::now();  // 更新时间
+        last_time_ = ros::Time::now();  // 更新时间
         return true;
-    }
-
-
-    //读取轮子的速度，然后里程计计算
-    void HeroChassisController::jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg) {
-
-        double dt = (ros::Time::now() - last_time).toSec();   // 根据时间差计算dt
-        last_time = ros::Time::now();              //记录last_cmd_time_用于计算dt
-
-        double v1 = msg->velocity[3];       //front_right
-        double v2 = msg->velocity[2];       //back_right
-        double v3 = msg->velocity[1];       //front_left
-        double v4 = msg->velocity[0];       //back_left
-
-        //使用微分思想进行计算与累加
-        dx = wheel_radius_ * 0.25 * (v1 + v2 + v3 + v4);
-        dy = wheel_radius_ * 0.25 * (v1 + v4 - v2 - v3);
-        dth = wheel_radius_ * (v1 + v2 - v3 - v4) / ((wheel_track_ / 2 + wheel_base_ / 2) * 4);
-
-        x += dx * cos(th) * dt - dy * sin(th) * dt;
-        y += dx * sin(th) * dt + dy * cos(th) * dt;
-        th += dth * dt;
-        //输出里程计（题目6）
-//        ROS_INFO("X_way :%f, Y_way:%f.", x, y);
     }
 
     void HeroChassisController::update(const ros::Time &time, const ros::Duration &period) {
 
         ros::Time current_time = time;
-        front_left_vel_ = front_left_joint_.getVelocity();
-        front_right_vel_ = front_right_joint_.getVelocity();
-        back_left_vel_ = back_left_joint_.getVelocity();
-        back_right_vel_ = back_right_joint_.getVelocity();
+        front_left_vel_ = wheel_radius * front_left_joint_.getVelocity();
+        front_right_vel_ = wheel_radius * front_right_joint_.getVelocity();
+        back_left_vel_ = wheel_radius * back_left_joint_.getVelocity();
+        back_right_vel_ = wheel_radius * back_right_joint_.getVelocity();
         //四轮驱动的逆运动学公式
         double front_left_target =
-                (target_vx_ - target_vy_ - (wheel_track_ + wheel_base_) * target_omega_) / wheel_radius_;
+                (target_vx_ - target_vy_ - (wheel_track + wheel_base) * target_omega_) / wheel_radius;
         double front_right_target =
-                (target_vx_ + target_vy_ + (wheel_track_ + wheel_base_) * target_omega_) / wheel_radius_;
+                (target_vx_ + target_vy_ + (wheel_track + wheel_base) * target_omega_) / wheel_radius;
         double back_left_target =
-                (target_vx_ + target_vy_ - (wheel_track_ + wheel_base_) * target_omega_) / wheel_radius_;
+                (target_vx_ + target_vy_ - (wheel_track + wheel_base) * target_omega_) / wheel_radius;
         double back_right_target =
-                (target_vx_ - target_vy_ + (wheel_track_ + wheel_base_) * target_omega_) / wheel_radius_;
+                (target_vx_ - target_vy_ + (wheel_track + wheel_base) * target_omega_) / wheel_radius;
 
         //  PID 控制命令
         double front_left_cmd = front_left_pid_.computeCommand(front_left_target - front_left_vel_, period);
@@ -97,13 +71,13 @@ namespace hero_chassis_controller {
         //因为没办法在cmd_vel中直接读取机器人的整体速度，所以就只能读取各车轮速度，再传建发布者来发布上去了(
         ros::NodeHandle nh;
         pub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
-        double v1 = front_right_joint_.getVelocity();
-        double v2 = back_right_joint_.getVelocity();
-        double v3 = front_left_joint_.getVelocity();
-        double v4 = back_left_joint_.getVelocity();
-        vx = wheel_radius_ * 0.25 * (v1 + v2 + v3 + v4);
-        vy = wheel_radius_ * 0.25 * (v3 + v2 - v1 - v4);
-        omega = wheel_radius_ * (v1 + v2 - v3 - v4) / ((wheel_track_ / 2 + wheel_base_ / 2) * 4);
+        double v1 = wheel_radius * front_left_joint_.getVelocity();
+        double v2 = wheel_radius * front_right_joint_.getVelocity();
+        double v3 = wheel_radius * back_left_joint_.getVelocity();
+        double v4 = wheel_radius * back_right_joint_.getVelocity();
+        vx = 0.5 * (v3 + v4);
+        vy = 0.5 * (v3 - v1);
+        omega = 0.5 * (v2 - v3) / ((wheel_track / 2 + wheel_base / 2));
         //消息信息设置
         a_msg.linear.x = vx;
         a_msg.linear.y = vy;
@@ -116,13 +90,13 @@ namespace hero_chassis_controller {
 
         updateOdometry();
 
-        last_time = current_time;
+        last_time_ = current_time;
     }
 
     // 获取当前cmd_vel上的速度
     void HeroChassisController::cmdVel_Calc(const geometry_msgs::Twist::ConstPtr &msg) {
         // 获取当前机器人与世界坐标系的变换
-        if (speed_mode_ == "global") {
+        if (speed_mode == "global") {
             // 如果速度模式是全局坐标系(global)，则需要转换速度到底盘中，以控制底盘
             global_vel.header.frame_id = "odom";
             global_vel.header.stamp = ros::Time(0);
@@ -134,7 +108,6 @@ namespace hero_chassis_controller {
             tf_listener.transformVector("base_link", global_vel, base_vel);
             target_vy_ = base_vel.vector.x;
             target_vy_ = base_vel.vector.y;
-
         } else {
             // 如果速度模式是底盘坐标系(local)，则直接传入速度
             vx = msg->linear.x;    // x轴线速度（前进）
@@ -144,36 +117,44 @@ namespace hero_chassis_controller {
         //以目前从/cmd_vel上读取的速度来计算当前每个轮子的速度（题目5）
         //输出各轮子速度(注释化ROS_INFO时记得把四个轮子速度的计算也注释，不然会报错)
 
-//        double front_left_now = (vx - vy - (wheel_track_ + wheel_base_) * omega);
-//        double front_right_now = (vx + vy + (wheel_track_ + wheel_base_) * omega);
-//        double back_left_now = (vx + vy - (wheel_track_ + wheel_base_) * omega);
-//        double back_right_now = (vx - vy + (wheel_track_ + wheel_base_) * omega);
-//        ROS_INFO("Now speed:  %f  ,  %f  ,  %f  ,  %f  ", front_left_now, front_right_now, back_left_now,
+//        double front_left_now = (vx - vy - (wheel_track + wheel_base) * omega);
+//        double front_right_now = (vx + vy + (wheel_track + wheel_base) * omega);
+//        double back_left_now = (vx + vy - (wheel_track + wheel_base) * omega);
+//        double back_right_now = (vx - vy + (wheel_track + wheel_base) * omega);
+//        ROS_INFO("FL: %f ,FR: %f ,BL: %f ,BR: %f ", front_left_now, front_right_now, back_left_now,
 //                 back_right_now);
 
-        last_time = ros::Time::now();  // 更新时间
+        last_time_ = ros::Time::now();  // 更新时间
     }
 
 
     void HeroChassisController::updateOdometry() {
-        //里程计再现，然后用于tf变换
-        double dt = (ros::Time::now() - last_time).toSec();   // 根据时间差计算dt
-        last_time = ros::Time::now();              //记录last_cmd_time_，用于下一次计算dt
+        //里程计
+        double dt = (ros::Time::now() - last_time_).toSec();   // 根据时间差计算dt
+        last_time_ = ros::Time::now();              //记录last_time_，用于下一次计算dt
 
-        //获取各个车轮的速度
-        double v1 = front_right_joint_.getVelocity();
-        double v2 = back_right_joint_.getVelocity();
-        double v3 = front_left_joint_.getVelocity();
-        double v4 = back_left_joint_.getVelocity();
+        double v1 = wheel_radius * front_left_joint_.getVelocity();
+        double v2 = wheel_radius * front_right_joint_.getVelocity();
+        double v3 = wheel_radius * back_left_joint_.getVelocity();
+        double v4 = wheel_radius * back_right_joint_.getVelocity();
 
         //使用微分思想进行计算与累加
-        dx = wheel_radius_ * 0.25 * (v1 + v2 + v3 + v4);
-        dy = wheel_radius_ * 0.25 * (v3 + v2 - v1 - v4);
-        dth = wheel_radius_ * (v1 + v2 - v3 - v4) / ((wheel_track_ / 2 + wheel_base_ / 2) * 4);
+        // 查到有两种公式，不知道哪种更准确，但是效果似乎一样
+        dx = 0.5 * (v3 + v4);
+        dy = 0.5 * (v3 - v1);
+        dth = 0.5 * (v2 - v3) / ((wheel_track / 2 + wheel_base / 2));
+
+        //dx = 0.25 * (v1 + v2 + v3 + v4);
+        //dy = 0.25 * (-v1 + v2 + v3 - v4);
+        //dth = 0.25 * (-v1 + v2 - v3 + v4) / ((wheel_track / 2 + wheel_base / 2));
 
         x += dx * cos(th) * dt - dy * sin(th) * dt;
         y += dx * sin(th) * dt + dy * cos(th) * dt;
         th += dth * dt;
+
+
+        //输出里程计（题目6）
+        ROS_INFO("X_way :%f, Y_way:%f.", x, y);
 
         //构造 nav_msgs::Odometry 消息来储存各种信息，并且将th转换为四元数
 

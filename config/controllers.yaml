@@ -2,8 +2,6 @@ controller:
   hero_chassis_controller:
     type: hero_chassis_controller/HeroChassisController
     wheel_radius: 0.07625  # 轮半径
-    chassis_width: 0.5  #底盘宽
-    chassis_length: 0.5  #底盘长
     wheel_base: 0.4  # 轴距
     wheel_track: 0.4  # 轮距
     speed_mode : "local"  #"global"或者"local"选择速度模式
@@ -13,7 +11,7 @@ controller:
 
 controller/hero_chassis_controller:
   front_left_pid:
-    p: 0
+    p: 0.1
     i: 0
     d: 0
     i_clamp_min: -1.0
@@ -21,7 +19,7 @@ controller/hero_chassis_controller:
     antiwindup: true
 
   front_right_pid:
-    p: 0
+    p: 0.1
     i: 0
     d: 0
     i_clamp_min: -1.0
@@ -29,7 +27,7 @@ controller/hero_chassis_controller:
     antiwindup: true
 
   back_left_pid:
-    p: 0
+    p: 0.1
     i: 0
     d: 0
     i_clamp_min: -1.0
@@ -37,7 +35,7 @@ controller/hero_chassis_controller:
     antiwindup: true
 
   back_right_pid:
-    p: 0
+    p: 0.1
     i: 0
     d: 0
     i_clamp_min: -1.0

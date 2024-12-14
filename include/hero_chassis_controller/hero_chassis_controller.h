@@ -33,13 +33,7 @@ namespace hero_chassis_controller {
 
         void update(const ros::Time &time, const ros::Duration &period) override;
 
-        void set_chassis_state(const geometry_msgs::Twist::ConstPtr& msg);
-
         void cmdVel_Calc(const geometry_msgs::Twist::ConstPtr &msg);
-
-        void jointStateCallback(const sensor_msgs::JointState::ConstPtr &msg);
-
-        void calc_vel() const;
 
         void updateOdometry();
         tf::TransformBroadcaster odom_broadcaster;
@@ -57,14 +51,14 @@ namespace hero_chassis_controller {
         ros::Publisher odom_pub;
         ros::Publisher pub;
 
-        ros::Time last_time;
+        ros::Time last_time_;
 
 
     private:
-        double wheel_radius_;  // 车轮半径
-        double wheel_base_;  //轴距
-        double wheel_track_;  //轮距
-        std::string speed_mode_;  //速度模式
+        double wheel_radius;  // 车轮半径
+        double wheel_base;  //轴距
+        double wheel_track;  //轮距
+        std::string speed_mode;  //速度模式
         double back_left_vel_ = 0;
         double front_left_vel_ = 0;
         double back_right_vel_ = 0;
