@@ -106,7 +106,7 @@ namespace hero_chassis_controller {
             tf_listener.waitForTransform("base_link", "odom", ros::Time(0), ros::Duration(3.0));
             tf_listener.lookupTransform("base_link", "odom", ros::Time(0), transform);
             tf_listener.transformVector("base_link", global_vel, base_vel);
-            target_vy_ = base_vel.vector.x;
+            target_vx_ = base_vel.vector.x;
             target_vy_ = base_vel.vector.y;
         } else {
             // 如果速度模式是底盘坐标系(local)，则直接传入速度
@@ -114,7 +114,7 @@ namespace hero_chassis_controller {
             vy = msg->linear.y;    // y轴线速度（侧移）
             omega = msg->angular.z;    // 角速度（旋转）
         }
-        //以目前从/cmd_vel上读取的速度来计算当前每个轮子的速度（题目5）
+        //以目前从/cmd_vel上读取的速度来计算当前每个轮子的角速度（题目5）
         //输出各轮子速度(注释化ROS_INFO时记得把四个轮子速度的计算也注释，不然会报错)
 
 //        double front_left_now = (vx - vy - (wheel_track + wheel_base) * omega);
@@ -154,7 +154,7 @@ namespace hero_chassis_controller {
 
 
         //输出里程计（题目6）
-        ROS_INFO("X_way :%f, Y_way:%f.", x, y);
+//        ROS_INFO("X_way :%f, Y_way:%f.", x, y);
 
         //构造 nav_msgs::Odometry 消息来储存各种信息，并且将th转换为四元数
 
