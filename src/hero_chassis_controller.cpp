@@ -1,4 +1,4 @@
-//Created by Aoalas(刘焯林)
+//Created by Aoalas
 //最终考核代码，其中ROS_INFO已被注释
 //关于键盘控制的程序，我新开了一个软件包，在另一个仓库内，详细请看README.md里的内容
 
